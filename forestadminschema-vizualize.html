@@ -1,0 +1,156 @@
+<!doctype html>
+
+<meta charset="utf-8">
+<title>Dagre Interactive Demo</title>
+
+<script src="https://d3js.org/d3.v4.js"></script>
+<script src="https://dagrejs.github.io/project/graphlib-dot/v0.6.3/graphlib-dot.js"></script>
+<script src="./dagre-d3.js"></script>
+
+<style>
+svg {
+  border: 1px solid #999;
+  overflow: hidden;
+}
+
+.node {
+  white-space: nowrap;
+}
+
+.node rect,
+.node circle,
+.node ellipse {
+  stroke: #333;
+  fill: #fff;
+  stroke-width: 1.5px;
+}
+
+.cluster rect {
+  stroke: #333;
+  fill: #000;
+  fill-opacity: 0.1;
+  stroke-width: 1.5px;
+}
+
+.edgePath path.path {
+  stroke: #333;
+  stroke-width: 1.5px;
+  fill: none;
+}
+</style>
+
+<style>
+h1, h2 {
+  color: #333;
+}
+
+textarea {
+  width: 800px;
+}
+
+label {
+  margin-top: 1em;
+  display: block;
+}
+
+.error {
+  color: red;
+}
+</style>
+
+<link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+
+<body onLoad="tryDraw();" style="font-family: roboto, sans-serif">
+
+<h1>Visualize forestadmin-schema.json</h1>
+
+<form>
+  <label for="inputGraph">Forest admin schema json</label>
+  <textarea id="inputForestSchema" rows="5" style="display: block" onKeyUp="tryDraw();">
+    ...forest admin schema...
+  </textarea>
+  <button>generate (to implement transformation from schema to graph)</button>
+</form>
+
+<form>
+  <label for="inputGraph">Graph Definition</label>
+  <textarea id="inputGraph" rows="5" style="display: block" onKeyUp="tryDraw();">
+
+digraph {
+    node [rx=5 ry=5 labelStyle="font: 300 14px 'roboto', Helvetica"]
+    edge [labelStyle="font: 300 14px 'roboto', Helvetica"]
+    A [labelType="html" label="<span><span>Collection A</span><ul><li>att1</li><li>att2</li></ul><span>Actions</span><ul><li>recycle</li><li>purge</li></ul></span>"];
+    B [labelType="html" label="<span><span>Smart Collection B</span><ul><li>att1</li><li>att2</li></ul></span>"];
+    C [labelType="html" label="<span><span>Collection C</span><ul><li>att1</li><li>att2</li></ul></span>"];
+    D [labelType="html" label="<span><span>Collection D</span><ul><li>att1</li><li>att2</li></ul><span>Segments</span><ul><li>to validate</li><li>validated</li><li>rejected</li></ul></span>"];
+    E [labelType="html" label="<span><span>Collection E</span><ul><li>att1</li><li>att2</li></ul></span>"];
+    A -> B -> C;
+    B -> D;
+    D -> E [label="red link" style="stroke: #f77; stroke-width: 2px;" arrowheadStyle="fill: #f77"];
+    C -> E;
+    A -> D [labelType="html" label="<span>link A->D</span>"];
+    E -> A;
+}
+  </textarea>
+</form>
+
+<h2>Schema Visualization</h2>
+
+<svg width=100% height=800>
+  <g/>
+</svg>
+
+<script>
+var inputGraph = document.querySelector("#inputGraph");
+
+var oldInputGraphValue;
+
+var graphRE = /[?&]graph=([^&]+)/;
+var graphMatch = window.location.search.match(graphRE);
+if (graphMatch) {
+  inputGraph.value = decodeURIComponent(graphMatch[1]);
+}
+var debugAlignmentRE = /[?&]alignment=([^&]+)/;
+var debugAlignmentMatch = window.location.search.match(debugAlignmentRE);
+var debugAlignment;
+if (debugAlignmentMatch) debugAlignment = debugAlignmentMatch[1];
+
+// Set up zoom support
+var svg = d3.select("svg"),
+    inner = d3.select("svg g"),
+    zoom = d3.zoom().on("zoom", function() {
+      inner.attr("transform", d3.event.transform);
+    });
+svg.call(zoom);
+
+// Create and configure the renderer
+var render = dagreD3.render();
+
+  var g;
+function tryDraw() {
+  if (oldInputGraphValue !== inputGraph.value) {
+    inputGraph.setAttribute("class", "");
+    oldInputGraphValue = inputGraph.value;
+    try {
+      g = graphlibDot.read(inputGraph.value);
+    } catch (e) {
+      inputGraph.setAttribute("class", "error");
+      throw e;
+    }
+
+    // Set margins, if not present
+    if (!g.graph().hasOwnProperty("marginx") &&
+        !g.graph().hasOwnProperty("marginy")) {
+      g.graph().marginx = 20;
+      g.graph().marginy = 20;
+    }
+
+    g.graph().transition = function(selection) {
+      return selection.transition().duration(500);
+    };
+
+    // Render the graph into svg g
+    d3.select("svg g").call(render, g);
+  }
+}
+</script>
