@@ -1,80 +1,80 @@
 <!doctype html>
 
 <meta charset="utf-8">
-<title>Dagre Interactive Demo</title>
+<title>Forest Admin Schema Visualizer</title>
 
 <script src="https://d3js.org/d3.v4.js"></script>
 <script src="https://dagrejs.github.io/project/graphlib-dot/v0.6.3/graphlib-dot.js"></script>
 <script src="./dagre-d3.js"></script>
 
 <style>
-svg {
-  border: 1px solid #999;
-  overflow: hidden;
-}
+  svg {
+    border: 1px solid #999;
+    overflow: hidden;
+  }
 
-.node {
-  white-space: nowrap;
-}
+  .node {
+    white-space: nowrap;
+  }
 
-.node rect,
-.node circle,
-.node ellipse {
-  stroke: #333;
-  fill: #fff;
-  stroke-width: 1.5px;
-}
+  .node rect,
+  .node circle,
+  .node ellipse {
+    stroke: #333;
+    fill: #fff;
+    stroke-width: 1.5px;
+  }
 
-.cluster rect {
-  stroke: #333;
-  fill: #000;
-  fill-opacity: 0.1;
-  stroke-width: 1.5px;
-}
+  .cluster rect {
+    stroke: #333;
+    fill: #000;
+    fill-opacity: 0.1;
+    stroke-width: 1.5px;
+  }
 
-.edgePath path.path {
-  stroke: #333;
-  stroke-width: 1.5px;
-  fill: none;
-}
+  .edgePath path.path {
+    stroke: #333;
+    stroke-width: 1.5px;
+    fill: none;
+  }
 </style>
 
 <style>
-h1, h2 {
-  color: #333;
-}
+  h1, h2 {
+    color: #333;
+  }
 
-textarea {
-  width: 800px;
-}
+  textarea {
+    width: 800px;
+  }
 
-label {
-  margin-top: 1em;
-  display: block;
-}
+  label {
+    margin-top: 1em;
+    display: block;
+  }
 
-.error {
-  color: red;
-}
+  .error {
+    color: red;
+  }
 </style>
 
 <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
 
-<body onLoad="tryDraw();" style="font-family: roboto, sans-serif">
+<body style="font-family: roboto, sans-serif">
 
 <h1>Visualize forestadmin-schema.json</h1>
 
 <form>
-  <label for="inputGraph">Forest admin schema json</label>
-  <textarea id="inputForestSchema" rows="5" style="display: block" onKeyUp="tryDraw();">
+  <label for="forestSchemaInput">Forest admin schema json</label>
+  <textarea id="forestSchemaInput" rows="5" style="display: block" onKeyUp="redrawGraph();">
     ...forest admin schema...
   </textarea>
   <button>generate (to implement transformation from schema to graph)</button>
 </form>
 
 <form>
-  <label for="inputGraph">Graph Definition</label>
-  <textarea id="inputGraph" rows="5" style="display: block" onKeyUp="tryDraw();">
+  <label for="graphInput">Graph Definition</label>
+  <textarea id="graphInput" rows="5" style="display: block" onKeyUp="redrawGraph();">
 
 digraph {
     node [rx=5 ry=5 labelStyle="font: 300 14px 'roboto', Helvetica"]
@@ -101,56 +101,28 @@ digraph {
 </svg>
 
 <script>
-var inputGraph = document.querySelector("#inputGraph");
 
-var oldInputGraphValue;
-
-var graphRE = /[?&]graph=([^&]+)/;
-var graphMatch = window.location.search.match(graphRE);
-if (graphMatch) {
-  inputGraph.value = decodeURIComponent(graphMatch[1]);
-}
-var debugAlignmentRE = /[?&]alignment=([^&]+)/;
-var debugAlignmentMatch = window.location.search.match(debugAlignmentRE);
-var debugAlignment;
-if (debugAlignmentMatch) debugAlignment = debugAlignmentMatch[1];
-
-// Set up zoom support
-var svg = d3.select("svg"),
-    inner = d3.select("svg g"),
-    zoom = d3.zoom().on("zoom", function() {
-      inner.attr("transform", d3.event.transform);
+  const initZoom = () => {
+    const svg = d3.select('svg');
+    const inner = d3.select('svg g');
+    const zoom = d3.zoom().on('zoom', () => {
+      inner.attr('transform', d3.event.transform);
     });
-svg.call(zoom);
+    svg.call(zoom);
+  };
 
-// Create and configure the renderer
-var render = dagreD3.render();
-
-  var g;
-function tryDraw() {
-  if (oldInputGraphValue !== inputGraph.value) {
-    inputGraph.setAttribute("class", "");
-    oldInputGraphValue = inputGraph.value;
+  const redrawGraph = () => {
+    const graphInput = document.querySelector('#graphInput');
+    const render = dagreD3.render();
     try {
-      g = graphlibDot.read(inputGraph.value);
+      graphInput.setAttribute('class', '');
+      const g = graphlibDot.read(graphInput.value);
+      d3.select('svg g').call(render, g);
     } catch (e) {
-      inputGraph.setAttribute("class", "error");
+      graphInput.setAttribute('class', 'error');
       throw e;
     }
-
-    // Set margins, if not present
-    if (!g.graph().hasOwnProperty("marginx") &&
-        !g.graph().hasOwnProperty("marginy")) {
-      g.graph().marginx = 20;
-      g.graph().marginy = 20;
-    }
-
-    g.graph().transition = function(selection) {
-      return selection.transition().duration(500);
-    };
-
-    // Render the graph into svg g
-    d3.select("svg g").call(render, g);
-  }
-}
+  };
+  initZoom();
+  redrawGraph();
 </script>
