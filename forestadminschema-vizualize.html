@@ -66,30 +66,34 @@
 
 <form>
   <label for="forestSchemaInput">Forest admin schema json</label>
-  <textarea id="forestSchemaInput" rows="5" style="display: block" onKeyUp="redrawGraph();">
-    ...forest admin schema...
+  <textarea id="forestSchemaInput" rows="5" style="display: block" onKeyUp="forestToGraph();">
+    [
+      {"name":"A"},
+      {"name":"B"},
+      {"name":"C"},
+      {"name":"D"},
+      {"name":"E"}
+    ]
   </textarea>
-  <button>generate (to implement transformation from schema to graph)</button>
 </form>
 
 <form>
   <label for="graphInput">Graph Definition</label>
   <textarea id="graphInput" rows="5" style="display: block" onKeyUp="redrawGraph();">
-
 digraph {
     node [rx=5 ry=5 labelStyle="font: 300 14px 'roboto', Helvetica"]
     edge [labelStyle="font: 300 14px 'roboto', Helvetica"]
-    A [labelType="html" label="<span><span>Collection A</span><ul><li>att1</li><li>att2</li></ul><span>Actions</span><ul><li>recycle</li><li>purge</li></ul></span>"];
+    1 [labelType="html" label="<span><span>Collection A</span><ul><li>att1</li><li>att2</li></ul><span>Actions</span><ul><li>recycle</li><li>purge</li></ul></span>"];
     B [labelType="html" label="<span><span>Smart Collection B</span><ul><li>att1</li><li>att2</li></ul></span>"];
     C [labelType="html" label="<span><span>Collection C</span><ul><li>att1</li><li>att2</li></ul></span>"];
     D [labelType="html" label="<span><span>Collection D</span><ul><li>att1</li><li>att2</li></ul><span>Segments</span><ul><li>to validate</li><li>validated</li><li>rejected</li></ul></span>"];
     E [labelType="html" label="<span><span>Collection E</span><ul><li>att1</li><li>att2</li></ul></span>"];
-    A -> B -> C;
+    1 -> B -> C;
     B -> D;
     D -> E [label="red link" style="stroke: #f77; stroke-width: 2px;" arrowheadStyle="fill: #f77"];
     C -> E;
-    A -> D [labelType="html" label="<span>link A->D</span>"];
-    E -> A;
+    1 -> D [labelType="html" label="<span>link 1->D</span>"];
+    E -> 1;
 }
   </textarea>
 </form>
@@ -123,6 +127,33 @@ digraph {
       throw e;
     }
   };
+
+  const getForestJson = () => JSON.parse(document.querySelector('#forestSchemaInput').value);
+
+  const forestToGraph = () => {
+    const forestJson = getForestJson();
+    let output = [digraph.header];
+    forestJson.forEach(table=>{
+      output.push(`${table.name} [labelType="html" label="<span>Collection ${table.name}</span>"];`);
+    });
+    output.push(digraph.footer);
+
+    setGraphInput(output.join("\n"));
+  };
+
+  const setGraphInput = value => {
+    const graphInput = document.querySelector('#graphInput');
+    graphInput.value = value;
+    redrawGraph();
+  };
+
   initZoom();
   redrawGraph();
+
+  const digraph = {
+    header:"digraph {\n" +
+      "    node [rx=5 ry=5 labelStyle=\"font: 300 14px 'roboto', Helvetica\"]\n" +
+      "    edge [labelStyle=\"font: 300 14px 'roboto', Helvetica\"]",
+    footer:"}"
+  }
 </script>
