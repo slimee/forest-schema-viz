@@ -66,20 +66,22 @@
 
 <form>
   <label for="forestSchemaInput">Forest admin schema json</label>
-  <textarea id="forestSchemaInput" rows="5" style="display: block" onKeyUp="forestToGraph();">
-    [
-      {"name":"A"},
-      {"name":"B"},
-      {"name":"C"},
-      {"name":"D"},
-      {"name":"E"}
-    ]
+  <textarea id="forestSchemaInput" rows="15" style="display: block" onKeyUp="forestToGraph();">
+    {
+      "collections":[
+        {"name":"Environment", "fields":[{"field": "project", "type":"Number", "relationship": "BelongsTo", "reference": "project.projectId"}]},
+        {"name":"Project"},
+        {"name":"C"},
+        {"name":"D"},
+        {"name":"E"}
+      ]
+    }
   </textarea>
 </form>
 
 <form>
   <label for="graphInput">Graph Definition</label>
-  <textarea id="graphInput" rows="5" style="display: block" onKeyUp="redrawGraph();">
+  <textarea id="graphInput" rows="15" style="display: block" onKeyUp="redrawGraph();">
 digraph {
     node [rx=5 ry=5 labelStyle="font: 300 14px 'roboto', Helvetica"]
     edge [labelStyle="font: 300 14px 'roboto', Helvetica"]
@@ -98,9 +100,8 @@ digraph {
   </textarea>
 </form>
 
-<h2>Schema Visualization</h2>
-
-<svg width=100% height=800>
+<label for="svgGraph">Schema</label>
+<svg id="svgGraph" width=100% height=800>
   <g/>
 </svg>
 
@@ -132,13 +133,37 @@ digraph {
 
   const forestToGraph = () => {
     const forestJson = getForestJson();
+    const collections = forestJson.collections;
     let output = [digraph.header];
-    forestJson.forEach(table=>{
-      output.push(`${table.name} [labelType="html" label="<span>Collection ${table.name}</span>"];`);
+    collections.forEach(table => {
+
+      let tableDef = [`${table.name} [labelType="html" label="<span>${table.name}</span>`];
+      if (table.fields) {
+        tableDef.push('<ul>');
+        table.fields
+          .forEach(field => {
+            const fieldLabel = `<li>${field.field} : ${field.type}</li>`;
+            tableDef.push(fieldLabel);
+          });
+        tableDef.push('</ul>');
+      }
+      tableDef.push('"];');
+      output.push(tableDef.join(''));
+
+      if (table.fields) {
+        table.fields
+          .filter(field => field.relationship === 'BelongsTo')
+          .forEach(field => {
+            const fromFieldName = field.field;
+            const [toName, toFieldName] = field.reference.split('.');
+            output.push(`${table.name} -> ${toName} [labelType="html" label="<span>${fromFieldName}->${toFieldName}</span>"];`);
+          });
+      }
+
     });
     output.push(digraph.footer);
 
-    setGraphInput(output.join("\n"));
+    setGraphInput(output.join('\n'));
   };
 
   const setGraphInput = value => {
@@ -151,9 +176,9 @@ digraph {
   redrawGraph();
 
   const digraph = {
-    header:"digraph {\n" +
-      "    node [rx=5 ry=5 labelStyle=\"font: 300 14px 'roboto', Helvetica\"]\n" +
-      "    edge [labelStyle=\"font: 300 14px 'roboto', Helvetica\"]",
-    footer:"}"
-  }
+    header: 'digraph {\n' +
+      '    node [rx=5 ry=5 labelStyle="font: 300 14px \'roboto\', Helvetica"]\n' +
+      '    edge [labelStyle="font: 300 14px \'roboto\', Helvetica"]',
+    footer: '}',
+  };
 </script>
