@@ -70,7 +70,7 @@
     {
       "collections":[
         {"name":"Environment", "fields":[{"field": "project", "type":"Number", "relationship": "BelongsTo", "reference": "project.projectId"}]},
-        {"name":"Project"},
+        {"name":"Project", "isVirtual": true},
         {"name":"C"},
         {"name":"D"},
         {"name":"E"}
@@ -85,8 +85,8 @@
 digraph {
     node [rx=5 ry=5 labelStyle="font: 300 14px 'roboto', Helvetica"]
     edge [labelStyle="font: 300 14px 'roboto', Helvetica"]
-    1 [labelType="html" label="<span><span>Collection A</span><ul><li>att1</li><li>att2</li></ul><span>Actions</span><ul><li>recycle</li><li>purge</li></ul></span>"];
-    B [labelType="html" label="<span><span>Smart Collection B</span><ul><li>att1</li><li>att2</li></ul></span>"];
+    1 [labelType="html" label="<div>Collection A</div><div>Attributes</div><ul><li>att1</li><li>att2</li></ul><span>Actions</span><ul><li>recycle</li><li>purge</li></ul>"];
+    B [labelType="html" label="<div>Smart Collection B</div><ul><li>att1</li><li>att2</li></ul>"];
     C [labelType="html" label="<span><span>Collection C</span><ul><li>att1</li><li>att2</li></ul></span>"];
     D [labelType="html" label="<span><span>Collection D</span><ul><li>att1</li><li>att2</li></ul><span>Segments</span><ul><li>to validate</li><li>validated</li><li>rejected</li></ul></span>"];
     E [labelType="html" label="<span><span>Collection E</span><ul><li>att1</li><li>att2</li></ul></span>"];
@@ -108,12 +108,10 @@ digraph {
 <script>
 
   const initZoom = () => {
-    const svg = d3.select('svg');
-    const inner = d3.select('svg g');
     const zoom = d3.zoom().on('zoom', () => {
-      inner.attr('transform', d3.event.transform);
+      d3.select('svg g').attr('transform', d3.event.transform);
     });
-    svg.call(zoom);
+    d3.select('svg').call(zoom);
   };
 
   const redrawGraph = () => {
@@ -137,19 +135,38 @@ digraph {
     let output = [digraph.header];
     collections.forEach(table => {
 
-      let tableDef = [`${table.name} [labelType="html" label="<span>${table.name}</span>`];
+      const smart = table.isVirtual ? '(Smart) ' : '';
+
+      //Table
+      let tableDef = [`${table.name} [labelType="html" label="<div>${table.name}${smart}</div>`];
+      //+Attributes
       if (table.fields) {
+        tableDef.push(`<div>Attributes</div>`);
         tableDef.push('<ul>');
         table.fields
+          .filter(field => field.relationship !== 'BelongsTo')
           .forEach(field => {
             const fieldLabel = `<li>${field.field} : ${field.type}</li>`;
             tableDef.push(fieldLabel);
           });
         tableDef.push('</ul>');
       }
+      //+Actions
+      if (table.actions && table.actions.length) {
+        tableDef.push(`<div>Actions</div>`);
+        tableDef.push('<ul>');
+        table.actions
+          .forEach(action => {
+            const actionLabel = `<li>${action.type} : ${action.name}</li>`;
+            tableDef.push(actionLabel);
+          });
+        tableDef.push('</ul>');
+      }
+
       tableDef.push('"];');
       output.push(tableDef.join(''));
 
+      //links
       if (table.fields) {
         table.fields
           .filter(field => field.relationship === 'BelongsTo')
