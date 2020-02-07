@@ -1,0 +1,14 @@
+{
+  "name": "forest-schema-viz",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:slimee/forest-schema-viz.git",
+  "author": "Sliman <smedini@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "open": "^7.0.2",
+    "path": "^0.12.7",
+    "tiny-worker": "^2.3.0",
+    "viz.js": "^2.1.2"
+  }
+}
