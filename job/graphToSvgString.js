@@ -6,7 +6,8 @@ const Worker = require('tiny-worker');
 let worker = new Worker(path.resolve(__dirname, '../vendor/full.render.js'));
 let viz = new Viz({ worker });
 
-module.exports = graphvizGraph => viz.renderString(graphvizGraph)
+module.exports = graphvizGraph => viz
+  .renderString(graphvizGraph)
   .then((result) => {
     worker.terminate();
     return result;

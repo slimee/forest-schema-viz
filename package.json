@@ -1,14 +1,17 @@
 {
-  "name": "forest-schema-viz",
-  "version": "1.0.0",
+  "name": "show-schema",
+  "version": "0.0.13",
   "main": "index.js",
+  "bin": "./index.js",
   "repository": "git@github.com:slimee/forest-schema-viz.git",
   "author": "Sliman <smedini@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "global": "^4.4.0",
     "open": "^7.0.2",
     "path": "^0.12.7",
     "tiny-worker": "^2.3.0",
-    "viz.js": "^2.1.2"
+    "viz.js": "^2.1.2",
+    "yargs": "^15.1.0"
   }
 }

@@ -2,7 +2,7 @@ const SMART_ICON = '💫';
 const ACTION_ICON = '🚀';
 const digraph = {
   header: "digraph {" +
-
+    "rankdir=LR; " +
     "node [shape=record fontname=Helvetica fontsize=10]; ",
   footer: '}',
 };
@@ -35,7 +35,9 @@ module.exports = (forestSchema) => {
     }
 
     tableDef.push('"];');
-    output.push(tableDef.join(''));
+    let tableText = tableDef.join('');
+
+    output.push(tableText);
 
     //links
     if (table.fields) {
@@ -44,10 +46,7 @@ module.exports = (forestSchema) => {
         .forEach(field => {
           const fromFieldName = field.field;
           const [toName, toFieldName] = field.reference.split('.');
-          console.log(tableId, fromFieldName, "=>", toName, toFieldName);
-          // a:f1 -> b
           output.push(`${tableId}:<${tableId}.${fromFieldName}> -> ${toName}; `);
-          // output.push(`${table.name} -> ${toName} [labelType="html" label="<span>${fromFieldName}->${toFieldName}</span>"];`);
         });
     }
 

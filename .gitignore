@@ -1,0 +1,6 @@
+.idea
+/**/node_modules/
+/bak
+*.iml
+.forestadmin-schema.json
+.forestadmin-schema.json.svg
